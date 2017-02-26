@@ -1,3 +1,14 @@
+# Executables
+*.exe
+*.o
+*.out
+
+# Scripts
+*.bat
+
+# Results
+*.txt
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
