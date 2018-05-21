@@ -21,13 +21,12 @@ if flag_symbolic && exist('mp', 'class')
     symb_flag = 0;
 elseif flag_symbolic && license('test','Symbolic_Toolbox')
     fprintf('Multiprecision Computing Toolbox not installed.\n');
-    fprintf('Using Symbolic Math Toolbox to %d digits .\n', max_digits);
+    fprintf('Using Symbolic Math Toolbox to %d digits.\n', max_digits);
     digits(max_digits);
     min_step = vpa(power(10,-max_digits));
     quad_flag = 0;
     symb_flag = 1;
 else
-    fprintf('Symbolic Math Toolbox not installed.\n');
     fprintf('Using double precision.\n');
     max_digits = floor(-log10(eps));
     min_step = power(10,-(max_digits+1));

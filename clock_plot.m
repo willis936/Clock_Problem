@@ -12,7 +12,7 @@ if ~init_flag
     hold on;
     axis off;
     pbaspect([1 1 1]);
-    set(gca,'Tag', 'clock_plot');
+    set(gca, 'Tag', 'clock_plot');
 end
 cla;
 
@@ -28,7 +28,8 @@ hmns = plot([0 xmns], [0 ymns], 'g-');
 hsec = plot([0 xsec], [0 ysec], 'b-');
 
 if ~init_flag
-    legend([hhrs hmns hsec],{'hours','minutes','seconds'}, 'Location', 'NorthWest');
+    legend([hhrs hmns hsec], {'hours','minutes','seconds'}, ...
+        'Location', 'NorthWest', 'AutoUpdate','off');
 end
 
 % plot clock face
@@ -61,7 +62,8 @@ text(0.70,0.95,['t = ' sprintf('%.3f', time) ' s'], 'FontName', 'FixedWidth');
 text(0.70,0.90,['\Theta_h_m = ' sprintf('%.3f%c', thetahm, char(176))], 'FontName', 'FixedWidth');
 text(0.70,0.85,['\Theta_m_s = ' sprintf('%.3f%c', thetams, char(176))], 'FontName', 'FixedWidth');
 text(0.70,0.80,['\Theta_s_h = ' sprintf('%.3f%c', thetash, char(176))], 'FontName', 'FixedWidth');
-text(0.70,0.75,['A = ' sprintf('%.6f', A) ' u^2'], 'FontName', 'FixedWidth');
+%text(0.70,0.75,['A = ' sprintf('%.6f', A) ' u^2'], 'FontName', 'FixedWidth');
+text(0.70,0.75,['A = ' sprintf('%.6f', A/(3*sqrt(3)/4)*100) ' %'], 'FontName', 'FixedWidth');
 
 drawnow;
 drawnow;

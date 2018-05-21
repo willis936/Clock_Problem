@@ -3,6 +3,13 @@
 *.o
 *.out
 
+# Media
+*.png
+*.emf
+*.jpg
+*.mp4
+*.mov
+
 # Scripts
 *.bat
 
