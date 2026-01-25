@@ -6,7 +6,7 @@
 
 There is no time—not even in complex time—when the hour, minute, and second hands are exactly 120° apart from each other.
 
-## History:
+## History
 
 I came up with this problem in 2012 when I was an undergrad.  It was good for inspiring mathematical thinking among friends.
 
