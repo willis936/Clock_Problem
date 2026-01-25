@@ -19,12 +19,12 @@ In 2026 I went back to it to give it a final cleanup pass using LLMs for prettif
 
 **[Interactive Clock Simulator](https://willis936.github.io/Clock_Problem/)**
 
-Or open `clock_visualizer.html` locally in your browser.
+Or open `index.html` locally in your browser.
 
 ## Files
 
 - `clock_problem.py` - Analytical solution and near-miss calculator
-- `clock_visualizer.html` - Interactive browser-based visualization
+- `index.html` - Interactive browser-based visualization
 - `README.md` - This file
 
 ## Usage
