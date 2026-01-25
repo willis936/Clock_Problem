@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock Problem Visualizer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 10px; font-size: 1.8em; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+
+        .clock-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        #clock {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #2a2a4a 0%, #1a1a2e 100%);
+            border: 4px solid #4a4a6a;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 4px;
+        }
+
+        #hour-hand { width: 6px; height: 70px; background: #e74c3c; margin-left: -3px; z-index: 4; }
+        #minute-hand { width: 4px; height: 100px; background: #3498db; margin-left: -2px; z-index: 5; }
+        #second-hand { width: 2px; height: 120px; background: #2ecc71; margin-left: -1px; z-index: 6; }
+
+        /* 120° guide lines */
+        .guide {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            width: 2px;
+            height: 130px;
+            margin-left: -1px;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        #guide-120 {
+            background: linear-gradient(to top, transparent 0%, #f39c12 50%, #f39c12 100%);
+            border-top: 8px solid #f39c12;
+        }
+
+        #guide-240 {
+            background: linear-gradient(to top, transparent 0%, #9b59b6 50%, #9b59b6 100%);
+            border-top: 8px solid #9b59b6;
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .tick {
+            position: absolute;
+            width: 2px;
+            height: 10px;
+            background: #666;
+            top: 10px;
+            left: 50%;
+            transform-origin: center 140px;
+        }
+        .tick.major { height: 15px; width: 3px; background: #999; }
+
+        .controls {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .time-display {
+            font-size: 2.5em;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .slider-container { margin-bottom: 15px; }
+        .slider-container label { display: block; margin-bottom: 5px; color: #aaa; }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .slider-row input[type="range"] {
+            flex: 1;
+        }
+        .slider-value {
+            min-width: 60px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            color: #3498db;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: #3498db; color: #fff; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-secondary { background: #555; color: #fff; }
+        .btn-secondary:hover { background: #666; }
+        .btn-success { background: #2ecc71; color: #fff; }
+        .btn-success:hover { background: #27ae60; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label { color: #888; font-size: 0.9em; }
+
+        .near-misses {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .near-misses h3 { margin-bottom: 15px; }
+
+        .near-miss-list {
+            display: grid;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .near-miss-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .near-miss-item:hover { background: rgba(52, 152, 219, 0.3); }
+        .near-miss-item.active { background: rgba(52, 152, 219, 0.5); }
+
+        .near-miss-item.best {
+            border: 1px solid #2ecc71;
+        }
+
+        .near-miss-rank {
+            font-size: 0.75em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            margin-left: 8px;
+        }
+
+        .near-miss-rank.top { background: rgba(46, 204, 113, 0.3); color: #2ecc71; }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            flex-wrap: wrap;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .near-miss-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .near-miss-error {
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .pause-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(46, 204, 113, 0.9);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 Clock Problem</h1>
+        <p class="subtitle">When are all three hands equally spaced? <strong>Never!</strong></p>
+
+        <div id="pause-notification" class="pause-notification">
+            ⏸️ Near-miss reached!
+        </div>
+
+        <div class="clock-container">
+            <div id="clock">
+                <div class="center-dot"></div>
+                <!-- 120° guide lines (targets for equal spacing) -->
+                <div id="guide-120" class="guide"></div>
+                <div id="guide-240" class="guide"></div>
+                <!-- Clock hands -->
+                <div id="hour-hand" class="hand"></div>
+                <div id="minute-hand" class="hand"></div>
+                <div id="second-hand" class="hand"></div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color" style="background:#e74c3c"></div> Hour</div>
+            <div class="legend-item"><div class="legend-color" style="background:#3498db"></div> Minute</div>
+            <div class="legend-item"><div class="legend-color" style="background:#2ecc71"></div> Second</div>
+            <div class="legend-item"><div class="legend-color" style="background:#f39c12"></div> +120° Target</div>
+            <div class="legend-item"><div class="legend-color" style="background:#9b59b6"></div> +240° Target</div>
+        </div>
+
+        <div class="controls">
+            <div class="time-display" id="time-display">12:00:00.000</div>
+
+            <div class="slider-container">
+                <label>Time (drag to explore)</label>
+                <input type="range" id="time-slider" min="0" max="43200" step="0.001" value="0">
+            </div>
+
+            <div class="slider-container">
+                <label>Playback Speed</label>
+                <div class="slider-row">
+                    <input type="range" id="speed-slider" min="-1" max="2" step="0.01" value="0">
+                    <span id="speed-value" class="slider-value">1.0x</span>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn-primary" onclick="togglePlay()">▶ Play</button>
+                <button class="btn-secondary" onclick="setTime(0)">Reset to 12:00</button>
+                <button class="btn-success" onclick="jumpToNearMiss(5)">Best Near-Miss</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="gap1">120.00°</div>
+                <div class="stat-label">Gap 1 (smallest)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="gap2">120.00°</div>
+                <div class="stat-label">Gap 2</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="gap3">120.00°</div>
+                <div class="stat-label">Gap 3 (largest)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-error">0.00°</div>
+                <div class="stat-label">Total Error from 120°</div>
+            </div>
+        </div>
+
+        <div class="near-misses">
+            <h3>📍 All 22 Near-Miss Times — Chronological (click to jump 5s before)</h3>
+            <div class="near-miss-list" id="near-miss-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // All 22 near-misses in chronological order
+        const nearMisses = [
+            { time: 1301.808,   label: "00:21:41.808", error: 1.335, rank: 5 },
+            { time: 2603.616,   label: "00:43:23.616", error: 2.670, rank: 11 },
+            { time: 5207.232,   label: "01:26:47.232", error: 5.341, rank: 22 },
+            { time: 6569.124,   label: "01:49:29.124", error: 4.339, rank: 17 },
+            { time: 9172.740,   label: "02:32:52.740", error: 1.669, rank: 7 },
+            { time: 10474.548,  label: "02:54:34.548", error: 0.334, rank: 1 },
+            { time: 13078.164,  label: "03:37:58.164", error: 2.337, rank: 9 },
+            { time: 14379.972,  label: "03:59:39.972", error: 3.672, rank: 15 },
+            { time: 16983.672,  label: "04:44:03.672", error: 4.673, rank: 19 },
+            { time: 18345.480,  label: "05:05:45.480", error: 3.338, rank: 13 },
+            { time: 20949.096,  label: "05:49:09.096", error: 0.668, rank: 3 },
+            { time: 22250.904,  label: "06:10:50.904", error: 0.668, rank: 4 },
+            { time: 24854.520,  label: "06:54:14.520", error: 3.338, rank: 14 },
+            { time: 26156.328,  label: "07:15:56.328", error: 4.673, rank: 20 },
+            { time: 28820.028,  label: "08:00:20.028", error: 3.672, rank: 16 },
+            { time: 30121.836,  label: "08:22:01.836", error: 2.337, rank: 10 },
+            { time: 32725.452,  label: "09:05:25.452", error: 0.334, rank: 2 },
+            { time: 34027.260,  label: "09:27:07.260", error: 1.669, rank: 8 },
+            { time: 36630.876,  label: "10:10:30.876", error: 4.339, rank: 18 },
+            { time: 37992.768,  label: "10:33:12.768", error: 5.341, rank: 21 },
+            { time: 40596.384,  label: "11:16:36.384", error: 2.670, rank: 12 },
+            { time: 41898.192,  label: "11:38:18.192", error: 1.335, rank: 6 },
+        ];
+
+        let isPlaying = false;
+        let playInterval = null;
+        let currentTime = 0;
+        let playbackSpeed = 1.0;
+        let lastNearMissIndex = -1; // Track which near-miss we last paused at
+
+        // Initialize clock ticks
+        const clock = document.getElementById('clock');
+        for (let i = 0; i < 60; i++) {
+            const tick = document.createElement('div');
+            tick.className = 'tick' + (i % 5 === 0 ? ' major' : '');
+            tick.style.transform = `rotate(${i * 6}deg)`;
+            clock.appendChild(tick);
+        }
+
+        // Initialize near-miss list
+        const nearMissList = document.getElementById('near-miss-list');
+        nearMisses.forEach((nm, i) => {
+            const item = document.createElement('div');
+            item.className = 'near-miss-item' + (nm.rank <= 2 ? ' best' : '');
+
+            const rankClass = nm.rank <= 4 ? 'top' : '';
+            const rankLabel = nm.rank === 1 ? '🥇 1st' : 
+                              nm.rank === 2 ? '🥈 2nd' : 
+                              nm.rank === 3 ? '🥉 3rd' : 
+                              `${nm.rank}th`;
+
+            item.innerHTML = `
+                <span class="near-miss-info">
+                    #${i + 1} ${nm.label}
+                    <span class="near-miss-rank ${rankClass}">${rankLabel}</span>
+                </span>
+                <span class="near-miss-error">Error: ${nm.error.toFixed(3)}°</span>
+            `;
+            item.onclick = () => jumpToNearMiss(i);
+            nearMissList.appendChild(item);
+        });
+
+        // Speed slider (logarithmic scale: 0.1x to 100x)
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+
+        speedSlider.addEventListener('input', (e) => {
+            // Logarithmic scale: -1 -> 0.1x, 0 -> 1x, 2 -> 100x
+            playbackSpeed = Math.pow(10, parseFloat(e.target.value));
+            speedValue.textContent = playbackSpeed < 10 ? playbackSpeed.toFixed(1) + 'x' : Math.round(playbackSpeed) + 'x';
+        });
+
+        function setTime(seconds) {
+            currentTime = seconds;
+            document.getElementById('time-slider').value = seconds;
+            updateClock();
+        }
+
+        function updateClock() {
+            const t = currentTime;
+
+            // Calculate angles (degrees from 12 o'clock, clockwise)
+            const hourAngle = (t / 120) % 360;
+            const minuteAngle = (t / 10) % 360;
+            const secondAngle = (t * 6) % 360;
+
+            // Update hands
+            document.getElementById('hour-hand').style.transform = `rotate(${hourAngle}deg)`;
+            document.getElementById('minute-hand').style.transform = `rotate(${minuteAngle}deg)`;
+            document.getElementById('second-hand').style.transform = `rotate(${secondAngle}deg)`;
+
+            // Update 120° guide lines (offset from hour hand)
+            document.getElementById('guide-120').style.transform = `rotate(${hourAngle + 120}deg)`;
+            document.getElementById('guide-240').style.transform = `rotate(${hourAngle + 240}deg)`;
+
+            // Update time display
+            const hours = Math.floor(t / 3600);
+            const minutes = Math.floor((t % 3600) / 60);
+            const seconds = t % 60;
+            document.getElementById('time-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${seconds.toFixed(3).padStart(6, '0')}`;
+
+            // Calculate gaps
+            const angles = [hourAngle, minuteAngle, secondAngle].sort((a, b) => a - b);
+            const gaps = [
+                angles[1] - angles[0],
+                angles[2] - angles[1],
+                360 - angles[2] + angles[0]
+            ].sort((a, b) => a - b);
+
+            // Update stats
+            document.getElementById('gap1').textContent = gaps[0].toFixed(2) + '°';
+            document.getElementById('gap2').textContent = gaps[1].toFixed(2) + '°';
+            document.getElementById('gap3').textContent = gaps[2].toFixed(2) + '°';
+
+            const totalError = gaps.reduce((sum, g) => sum + Math.abs(g - 120), 0);
+            document.getElementById('total-error').textContent = totalError.toFixed(3) + '°';
+            document.getElementById('total-error').style.color = 
+                totalError < 1 ? '#2ecc71' : totalError < 5 ? '#f1c40f' : '#e74c3c';
+        }
+
+        function checkNearMiss() {
+            // Check if we've reached a near-miss time (within 0.05 seconds tolerance)
+            const tolerance = 0.05 * playbackSpeed; // Scale tolerance with speed
+
+            for (let i = 0; i < nearMisses.length; i++) {
+                const diff = Math.abs(currentTime - nearMisses[i].time);
+                if (diff < tolerance && i !== lastNearMissIndex) {
+                    // We've hit a near-miss!
+                    lastNearMissIndex = i;
+
+                    // Snap to exact time
+                    currentTime = nearMisses[i].time;
+                    setTime(currentTime);
+
+                    // Pause playback
+                    if (isPlaying) {
+                        togglePlay();
+                    }
+
+                    // Show notification
+                    showPauseNotification(i);
+
+                    // Highlight the near-miss in the list
+                    highlightNearMiss(i);
+
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function showPauseNotification(index) {
+            const notification = document.getElementById('pause-notification');
+            notification.textContent = `⏸️ Near-miss #${index + 1} reached! (Rank: ${nearMisses[index].rank})`;
+            notification.style.display = 'block';
+
+            // Reset animation
+            notification.style.animation = 'none';
+            notification.offsetHeight; // Trigger reflow
+            notification.style.animation = 'fadeInOut 3s ease-in-out';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function highlightNearMiss(index) {
+            document.querySelectorAll('.near-miss-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            // Scroll the item into view
+            const items = document.querySelectorAll('.near-miss-item');
+            if (items[index]) {
+                items[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.querySelector('.btn-primary');
+
+            if (isPlaying) {
+                btn.textContent = '⏸ Pause';
+                // Reset lastNearMissIndex if we're far from any near-miss
+                const nearAny = nearMisses.some(nm => Math.abs(currentTime - nm.time) < 1);
+                if (!nearAny) {
+                    lastNearMissIndex = -1;
+                }
+
+                playInterval = setInterval(() => {
+                    // Advance time based on playback speed
+                    // Interval is 10ms, so advance by 0.01 * speed seconds
+                    currentTime = (currentTime + 0.01 * playbackSpeed) % 43200;
+                    document.getElementById('time-slider').value = currentTime;
+                    updateClock();
+
+                    // Check if we hit a near-miss
+                    checkNearMiss();
+                }, 10);
+            } else {
+                btn.textContent = '▶ Play';
+                clearInterval(playInterval);
+            }
+        }
+
+        function jumpToNearMiss(index) {
+            // Stop playback if running
+            if (isPlaying) togglePlay();
+
+            // Reset the last near-miss tracker so we can pause at this one
+            lastNearMissIndex = -1;
+
+            // Jump to 5 seconds before the near-miss time
+            const targetTime = Math.max(0, nearMisses[index].time - 5);
+            setTime(targetTime);
+
+            // Highlight active item
+            highlightNearMiss(index);
+        }
+
+        // Time slider event
+        document.getElementById('time-slider').addEventListener('input', (e) => {
+            if (isPlaying) togglePlay();
+            currentTime = parseFloat(e.target.value);
+            lastNearMissIndex = -1; // Reset so we can pause at near-misses again
+            updateClock();
+        });
+
+        // Initialize
+        updateClock();
+    </script>
+</body>
+</html>
