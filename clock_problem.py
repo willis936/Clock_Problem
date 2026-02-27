@@ -1,6 +1,8 @@
 from fractions import Fraction
 from typing import List, Tuple, NamedTuple
 import math
+import sympy as sp
+from sympy.solvers.diophantine import diophantine
 
 # =============================================================================
 # CONSTANTS
@@ -273,6 +275,51 @@ def analyze_complex_time() -> dict:
         ]
     }
 
+def prove_complex_sympy() -> None:
+    """Uses SymPy to mathematically prove that complex time collapses to real time."""
+    print("--- Automated SymPy Verification ---")
+
+    # Define variables: t is complex, k1 and k2 must be integers (full laps)
+    t = sp.Symbol('t', complex=True)
+    k1 = sp.Symbol('k1', integer=True)
+    k2 = sp.Symbol('k2', integer=True)
+
+    # Define the angular positions (in fractional rotations)
+    h = t / 12
+    m = t
+    s = 60 * t
+
+    # Setup the equations for 120-degree (1/3 rotation) separation
+    eq1 = sp.Eq(m - h, sp.Rational(1, 3) + k1)
+    eq2 = sp.Eq(s - m, sp.Rational(1, 3) + k2)
+
+    # Solve Eq 1 for complex time 't'
+    t_expr = sp.solve(eq1, t)[0]
+
+    # Substitute this value of t into Eq 2
+    substituted_eq2 = eq2.subs(t, t_expr)
+
+    # Rearrange into Diophantine form
+    diophantine_expr = sp.simplify((substituted_eq2.lhs - substituted_eq2.rhs) * 33)
+
+    print(f"Eq 1 (Minute - Hour): {eq1}")
+    print(f"Eq 2 (Second - Minute): {eq2}")
+
+    print(f"\nSolving Eq 1 yields: t = {t_expr}")
+    print("Because k₁ is a full-lap integer, the imaginary part of 't' is mathematically forced to 0.")
+
+    print(f"\nSubstituting t into Eq 2 yields the constraint:")
+    print(f"{diophantine_expr} = 0")
+
+    print("\nTesting for integer solutions in ℂ using SymPy...")
+    solutions = diophantine(diophantine_expr)
+
+    if not solutions:
+        print("✅ RESULT: SymPy confirms NO integer solutions exist.")
+        print("   The complex time hypothesis collapses back into the unsolvable real Diophantine equation.")
+    else:
+        print(f"❌ Solutions found: {solutions}")
+
 
 # =============================================================================
 # CLOSED-FORM FORMULAS
@@ -293,12 +340,6 @@ def closed_form_near_miss(rank: int) -> Fraction:
     Returns:
         Exact time in seconds as a Fraction
     """
-    # The pattern of best m values (for ranks 1-22)
-    # These minimize |11t/120 - 240| mod 360
-
-    # For the best near-misses, m follows a specific sequence
-    # derived from the continued fraction expansion of 11/719
-
     all_misses = get_best_near_misses(rank)
     if rank <= len(all_misses):
         return all_misses[rank - 1].time_seconds
@@ -332,7 +373,10 @@ def main():
     print("─" * 70)
     complex_analysis = analyze_complex_time()
     print(f"\nConclusion: {complex_analysis['conclusion']}")
-    print(f"\nReason: {complex_analysis['reason']}")
+    print(f"\nReason: {complex_analysis['reason']}\n")
+
+    # Automatically verify the complex mathematical impossibility
+    prove_complex_sympy()
 
     # Near-misses
     print("\n" + "─" * 70)
